@@ -88,6 +88,18 @@
   .repo:hover { text-decoration: underline; }
   .reason { font-size: 13px; color: var(--mut); margin-top: 10px; }
   .reason b { color: var(--txt); font-weight: 600; }
+  .scorebar { height: 5px; background: #0a0e1c; border-radius: 99px; margin: 12px 0 4px; overflow: hidden; }
+  .scorebar i { display: block; height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--acc2), var(--acc)); }
+  .card { animation: rise .38s cubic-bezier(.2,.7,.3,1) both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .ghbtn {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 20px;
+    font-size: 13.5px; color: var(--txt); text-decoration: none;
+    border: 1px solid var(--line); border-radius: 999px; padding: 9px 22px;
+    background: rgba(255,255,255,.02);
+  }
+  .ghbtn:hover { border-color: var(--acc); color: var(--acc); }
   .empty {
     text-align: center; color: var(--mut); padding: 40px 20px;
     border: 1px dashed var(--line); border-radius: 16px; font-size: 15px; line-height: 2;
@@ -106,6 +118,7 @@
       <b>iran-mcp</b> بهترین گزینه رو با ابزار پیشنهادی و دستور نصب تحویلت می‌ده.
       بدون حدس، بدون خوندن کل کاتالوگ.
     </p>
+    <a class="ghbtn" href="https://github.com/mohammad-abbasi-sh/iran-mcp-router" target="_blank" rel="noopener">★ مشاهده در گیت‌هاب</a>
   </header>
 
   <div class="search">
@@ -246,6 +259,7 @@ function render() {
   $meta.textContent = "";
   if (!q) return;
   let res;
+  const t0 = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
   try { res = route(q, 3); }
   catch (e) {
     $results.innerHTML = '<div class="empty">خطا در مسیریابی: ' + e.message + "</div>";
@@ -255,13 +269,17 @@ function render() {
     $results.innerHTML = '<div class="empty">سرور مناسبی پیدا نشد.<br>یه عبارت دیگه امتحان کن — مثلاً «قیمت دلار» یا «بلیط قطار».</div>';
     return;
   }
-  $meta.textContent = res.length + " گزینه پیدا شد";
+  const t1 = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+  $meta.textContent = res.length + " گزینه در " + Math.max(1, Math.round(t1 - t0)) + " میلی‌ثانیه";
+  const maxS = Math.max.apply(null, res.map(function (r) { return r.score; }).concat([1]));
   res.forEach((r, i) => {
     const card = document.createElement("div");
     card.className = "card";
+    card.style.animationDelay = (i * 90) + "ms";
     card.innerHTML =
       '<div><span class="rank">' + (i + 1) + "</span><h3>" + escapeHtml(r.title) + "</h3>" +
       '<span class="cat">' + escapeHtml(r.category) + "</span></div>" +
+      '<div class="scorebar"><i style="width:' + Math.round(100 * r.score / maxS) + '%"></i></div>' +
       '<div class="desc">' + escapeHtml(r.description) + "</div>" +
       '<div class="row"><span class="lbl">ابزار پیشنهادی</span><code>' + escapeHtml(r.suggested_tool) + "</code></div>" +
       '<div class="row"><span class="lbl">دستور نصب</span><code>' + escapeHtml(r.install) + '</code>' +
