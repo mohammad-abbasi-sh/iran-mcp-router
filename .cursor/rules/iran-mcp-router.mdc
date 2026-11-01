@@ -1,0 +1,23 @@
+---
+description: Route Iranian-web tasks to the right iran-mcp MCP server before guessing or reading catalog docs
+globs:
+  - "**/*.py"
+alwaysApply: false
+---
+
+# iran-mcp-router
+
+When the user asks for something from the Iranian web (prices, flights,
+food, doctors, stocks, classifieds, maps, news, ...), do NOT guess which
+MCP server handles it and do NOT read the whole iran-mcp catalog.
+
+1. Run the router first (one cheap deterministic call):
+   `python3 scripts/router_cli.py "<the task>"`  (repo: iran-mcp-router)
+   or call the `route_task` tool if the iran-mcp-router MCP server is configured.
+2. It returns ranked candidates: `server_id`, `suggested_tool`,
+   `install` (e.g. `uvx tgju-mcp`), `repo`, and `reason`.
+3. Install the chosen server and call its `suggested_tool`.
+   All routed servers are read-only and need no sign-in.
+
+Queries work in Persian (نیم‌فاصله and ي/ك variants are normalized) and English.
+The router is deterministic: same query, same ranking.
