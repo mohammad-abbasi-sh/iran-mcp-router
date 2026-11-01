@@ -75,6 +75,48 @@ def main() -> None:
     print(f"wrote data/catalog.json + web/catalog.js: {len(servers)} servers, {n_tools} tools")
     print(f"wrote web/router_rules.js: {len(SERVER_RULES)} server rules, "
           f"{len(CATEGORY_KEYWORDS)} categories")
+    inline_demo_assets()
+
+
+def inline_demo_assets() -> None:
+    """Inline web/*.js into index.html so the demo is fully self-contained.
+
+    The demo page must work as a single attached file (no relative fetches),
+    so the generated JS is embedded directly instead of <script src>.
+    Idempotent: re-running replaces previously inlined blocks.
+    """
+    import re
+
+    page = ROOT / "index.html"
+    if not page.exists():
+        print("index.html not found, skipping inline step")
+        return
+    html = page.read_text(encoding="utf-8")
+    for src_name, global_name in (
+        ("web/catalog.js", "IRAN_MCP_CATALOG"),
+        ("web/router_rules.js", "IRAN_MCP_ROUTER_RULES"),
+    ):
+        js = (ROOT / src_name).read_text(encoding="utf-8")
+        # `</script>` inside a JS string would close the block early; escape it.
+        js = js.replace("</script", "<\\/script")
+        inline_block = "<script>\n" + js + "</script>"
+        # Case 1: pristine <script src> tag.
+        tag = f'<script src="{src_name}"></script>'
+        if tag in html:
+            html = html.replace(tag, inline_block, 1)
+            print(f"inlined {src_name} ({len(js)} bytes)")
+            continue
+        # Case 2: a previously inlined block — replace it with fresh content.
+        pattern = re.compile(
+            r"<script>\s*window\." + global_name + r" = .*?</script>", re.S
+        )
+        html, n = pattern.subn(inline_block, html, count=1)
+        if n:
+            print(f"re-inlined {src_name} ({len(js)} bytes)")
+        else:
+            sys.exit(f"neither src tag nor inline block found for {src_name}")
+    page.write_text(html, encoding="utf-8")
+    print(f"index.html now self-contained ({page.stat().st_size} bytes)")
 
 
 if __name__ == "__main__":
