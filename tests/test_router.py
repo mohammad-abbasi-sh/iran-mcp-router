@@ -100,5 +100,92 @@ class TestDeterminism(unittest.TestCase):
         self.assertEqual(route("xyzq abcdef"), [])
 
 
+class TestRouteNewRules(unittest.TestCase):
+    """Coverage for the 37 servers added in the full-coverage pass."""
+
+    def _top(self, q):
+        r = route(q, top_k=1)
+        self.assertTrue(r, f"no result for {q!r}")
+        return r[0]
+
+    def test_audiobook(self):
+        self.assertEqual(self._top("کتاب صوتی")["server_id"], "fidibo-mcp")
+
+    def test_ebook(self):
+        self.assertEqual(self._top("طاقچه کتاب الکترونیک")["server_id"], "taaghche-mcp")
+
+    def test_villa_rental(self):
+        self.assertEqual(self._top("اجاره ویلا در شمال")["server_id"], "otaghak-mcp")
+
+    def test_car_ads(self):
+        self.assertEqual(self._top("آگهی خودرو")["server_id"], "bama-ir-mcp")
+
+    def test_inflation(self):
+        top = self._top("نرخ تورم")
+        self.assertEqual(top["server_id"], "amar-mcp")
+        self.assertEqual(top["suggested_tool"], "am_inflation")
+
+    def test_earthquake(self):
+        self.assertEqual(self._top("زلزله امروز تهران")["server_id"], "iran-quake-mcp")
+
+    def test_bitcoin(self):
+        self.assertEqual(self._top("قیمت بیت کوین")["server_id"], "iran-crypto-mcp")
+
+    def test_pharmacy(self):
+        self.assertEqual(self._top("داروخانه آنلاین")["server_id"], "darukade-mcp")
+
+    def test_tax(self):
+        self.assertEqual(self._top("مالیات بر ارزش افزوده")["server_id"], "iran-tax-mcp")
+
+    def test_mutual_fund(self):
+        self.assertEqual(self._top("صندوق سرمایه گذاری")["server_id"], "fipiran-mcp")
+
+    def test_software_download(self):
+        self.assertEqual(self._top("دانلود نرم افزار")["server_id"], "iran-downloads-mcp")
+
+    def test_cloud_status(self):
+        self.assertEqual(self._top("وضعیت سرورهای ابری")["server_id"], "iran-cloud-status-mcp")
+
+    def test_course(self):
+        self.assertEqual(self._top("دوره آموزشی برنامه نویسی")["server_id"], "maktabkhooneh-mcp")
+
+    def test_android_app(self):
+        self.assertEqual(self._top("اپلیکیشن اندروید")["server_id"], "iran-apps-mcp")
+
+    def test_official_gazette(self):
+        self.assertEqual(self._top("روزنامه رسمی")["server_id"], "rrk-mcp")
+
+    def test_cosmetics(self):
+        self.assertEqual(self._top("لوازم آرایشی")["server_id"], "asalbanoo-mcp")
+
+    def test_grocery(self):
+        self.assertEqual(self._top("خرید سوپرمارکتی")["server_id"], "okala-mcp")
+
+    def test_game_news(self):
+        self.assertEqual(self._top("اخبار بازی")["server_id"], "gamefa-mcp")
+
+    def test_bus_ticket(self):
+        self.assertEqual(self._top("بلیط اتوبوس")["server_id"], "flytoday-mcp")
+
+    def test_all_rules_reference_real_servers(self):
+        from router import SERVER_RULES
+        import json, os
+        cat = json.load(open(os.path.join(os.path.dirname(__file__), "..", "data", "catalog.json")))
+        by_id = {s["id"]: s for s in cat["servers"]}
+        for rule in SERVER_RULES:
+            self.assertIn(rule["id"], by_id, f"rule for unknown server {rule['id']}")
+            tools = {t["name"] for t in by_id[rule["id"]]["tools"]}
+            self.assertIn(rule["tool"], tools, f"{rule['id']}: tool {rule['tool']} not in catalog")
+            for intent_tool in rule.get("intent_tools", {}).values():
+                self.assertIn(intent_tool, tools, f"{rule['id']}: intent tool {intent_tool} not in catalog")
+
+    def test_full_coverage(self):
+        from router import SERVER_RULES
+        import json, os
+        cat = json.load(open(os.path.join(os.path.dirname(__file__), "..", "data", "catalog.json")))
+        ruled = {r["id"] for r in SERVER_RULES}
+        self.assertEqual(ruled, {s["id"] for s in cat["servers"]})
+
+
 if __name__ == "__main__":
     unittest.main()
