@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iran-mcp-router — روتر سرورهای ایرانی برای ایجنت‌ها</title>
+<style>
+  :root {
+    --bg: #0b0e17;
+    --bg2: #111627;
+    --card: #151c33;
+    --line: #263052;
+    --txt: #eef1f8;
+    --mut: #9aa4c0;
+    --acc: #38e1c6;
+    --acc2: #f4b54a;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Vazirmatn", "IRANSans", Tahoma, "Segoe UI", system-ui, sans-serif;
+    background: radial-gradient(1200px 600px at 80% -10%, #1b2450 0%, var(--bg) 55%) fixed, var(--bg);
+    color: var(--txt);
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 34px; }
+  .badge {
+    display: inline-block; font-size: 13px; color: var(--acc);
+    border: 1px solid var(--acc); border-radius: 999px;
+    padding: 5px 16px; margin-bottom: 16px; letter-spacing: .5px;
+  }
+  h1 { font-size: clamp(26px, 5vw, 42px); font-weight: 800; margin-bottom: 10px; }
+  h1 .t { color: var(--acc); }
+  p.sub { color: var(--mut); font-size: 15px; line-height: 1.9; max-width: 620px; margin: 0 auto; }
+  p.sub b { color: var(--txt); }
+  .search { position: relative; margin: 30px 0 14px; }
+  .search input {
+    width: 100%; font-size: 19px; font-family: inherit; color: var(--txt);
+    background: var(--bg2); border: 2px solid var(--line); border-radius: 16px;
+    padding: 18px 22px; outline: none; transition: border .2s, box-shadow .2s;
+  }
+  .search input:focus { border-color: var(--acc); box-shadow: 0 0 0 4px rgba(56,225,198,.12); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 8px; }
+  .chips button {
+    font-family: inherit; font-size: 13px; color: var(--mut); cursor: pointer;
+    background: transparent; border: 1px dashed var(--line); border-radius: 999px; padding: 7px 14px;
+  }
+  .chips button:hover { color: var(--acc); border-color: var(--acc); }
+  .meta { text-align: center; color: var(--mut); font-size: 13px; margin: 18px 0 6px; }
+  .results { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
+  .card {
+    background: linear-gradient(180deg, var(--card), #10162b);
+    border: 1px solid var(--line); border-radius: 16px; padding: 20px 22px;
+    position: relative; overflow: hidden;
+  }
+  .card:first-child { border-color: var(--acc); }
+  .card:first-child::before {
+    content: "بهترین گزینه"; position: absolute; top: 14px; left: 16px;
+    font-size: 11px; color: #06281f; background: var(--acc);
+    border-radius: 999px; padding: 3px 12px; font-weight: 700;
+  }
+  .rank {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 10px; font-weight: 800; font-size: 16px;
+    background: #1e2a52; color: var(--acc2); margin-left: 10px; vertical-align: middle;
+  }
+  .card h3 { display: inline; font-size: 19px; vertical-align: middle; }
+  .cat {
+    display: inline-block; font-size: 12px; color: var(--mut);
+    border: 1px solid var(--line); border-radius: 999px; padding: 3px 12px; margin-right: 10px;
+  }
+  .desc { color: var(--mut); font-size: 14px; margin: 12px 0; line-height: 1.9; }
+  .row { display: flex; align-items: center; gap: 10px; margin: 8px 0; flex-wrap: wrap; }
+  .lbl { font-size: 12px; color: var(--mut); min-width: 74px; }
+  code {
+    font-family: var(--mono); font-size: 13.5px; direction: ltr; unicode-bidi: embed;
+    background: #0a0e1c; border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px;
+    color: var(--acc); flex: 1; overflow-x: auto; white-space: nowrap;
+  }
+  .copy {
+    font-family: inherit; font-size: 13px; cursor: pointer; color: var(--bg);
+    background: var(--acc); border: none; border-radius: 8px; padding: 8px 16px; font-weight: 700;
+  }
+  .copy:hover { filter: brightness(1.1); }
+  .repo { font-size: 13px; color: var(--acc2); text-decoration: none; direction: ltr; unicode-bidi: embed; }
+  .repo:hover { text-decoration: underline; }
+  .reason { font-size: 13px; color: var(--mut); margin-top: 10px; }
+  .reason b { color: var(--txt); font-weight: 600; }
+  .empty {
+    text-align: center; color: var(--mut); padding: 40px 20px;
+    border: 1px dashed var(--line); border-radius: 16px; font-size: 15px; line-height: 2;
+  }
+  footer { text-align: center; color: var(--mut); font-size: 12.5px; margin-top: 50px; line-height: 2; }
+  footer a { color: var(--acc); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="badge" id="srvCount">…</div>
+    <h1><span class="t">iran-mcp-router</span> — تابلوی راهنمای وب ایرانی</h1>
+    <p class="sub">
+      تسکت رو به <b>فارسی یا انگلیسی</b> بنویس؛ روتر از بین سرورهای
+      <b>iran-mcp</b> بهترین گزینه رو با ابزار پیشنهادی و دستور نصب تحویلت می‌ده.
+      بدون حدس، بدون خوندن کل کاتالوگ.
+    </p>
+  </header>
+
+  <div class="search">
+    <input id="q" type="text" placeholder="مثلاً: قیمت سکه امامی … یا: cheapest flight Tehran Mashhad" autocomplete="off">
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="meta" id="meta"></div>
+  <div class="results" id="results"></div>
+
+  <footer>
+    مکمل <a href="https://github.com/sepehr071/iran-mcp" target="_blank" rel="noopener">sepehr071/iran-mcp</a>
+    — این صفحه آفلاین کار می‌کند و هیچ درخواستی به بیرون نمی‌فرستد.<br>
+    ساخته‌شده توسط <a href="https://github.com/mohammad-abbasi-sh/iran-mcp-router" target="_blank" rel="noopener">mohammad-abbasi-sh/iran-mcp-router</a>
+  </footer>
+</div>
+
+<script src="web/catalog.js"></script>
+<script src="web/router_rules.js"></script>
+<script>
+"use strict";
+/* Small in-page port of src/router.py. Data + rules come from the generated
+   web/*.js files, so this page can never drift from the Python engine. */
+
+function normalizeFa(t) {
+  t = String(t).normalize("NFKC");
+  t = t.replace(/ي/g, "ی").replace(/ك/g, "ک").replace(/ة/g, "ه")
+       .replace(/ؤ/g, "و").replace(/إ/g, "ا").replace(/أ/g, "ا");
+  t = t.replace(/[۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩]/g,
+    d => "۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩".indexOf(d) % 10);
+  t = t.replace(/[‌‍]/g, "");
+  return t.replace(/\s+/g, " ").trim().toLowerCase();
+}
+function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+function hits(query, keywords) {
+  const out = [];
+  for (const k of keywords) {
+    const nk = normalizeFa(k);
+    if (!nk) continue;
+    // JS \b is ASCII-only; use Unicode-aware boundaries for Persian.
+    const re = new RegExp("(?<![\\p{L}\\p{N}_])" + escRe(nk) + "(?![\\p{L}\\p{N}_])", "u");
+    if (re.test(query)) out.push(k);
+  }
+  return out;
+}
+function route(query, topK) {
+  const nq = normalizeFa(query);
+  const rules = window.IRAN_MCP_ROUTER_RULES;
+  const byId = {};
+  window.IRAN_MCP_CATALOG.servers.forEach(s => { byId[s.id] = s; });
+  const scored = [];
+  for (const rule of rules.server_rules) {
+    if (!byId[rule.id]) continue;
+    const kh = hits(nq, rule.keywords);
+    const ah = hits(nq, rule.aliases || []);
+    const score = 3 * kh.length + 4 * ah.length;
+    if (!score) continue;
+    let tool = rule.tool;
+    for (const intent of Object.keys(rules.intent_words)) {
+      if (rule.intent_tools && rule.intent_tools[intent] &&
+          hits(nq, rules.intent_words[intent]).length) {
+        tool = rule.intent_tools[intent];
+        break;
+      }
+    }
+    const reasons = [];
+    if (kh.length) reasons.push("کلیدواژه: " + kh.join("، "));
+    if (ah.length) reasons.push("نام سرویس: " + ah.join("، "));
+    scored.push({ score, sid: rule.id, tool, reasons });
+  }
+  const catHit = {};
+  for (const cat of Object.keys(rules.category_keywords)) {
+    const h = hits(nq, rules.category_keywords[cat]);
+    if (h.length) catHit[cat] = h;
+  }
+  if (Object.keys(catHit).length) {
+    const ruled = new Set(scored.map(s => s.sid));
+    for (const s of window.IRAN_MCP_CATALOG.servers) {
+      if (ruled.has(s.id)) continue;
+      const h = catHit[s.category] || [];
+      if (h.length) scored.push({
+        score: h.length, sid: s.id,
+        tool: (s.tools[0] || {}).name || "",
+        reasons: ["دسته‌بندی: " + h.join("، ")]
+      });
+    }
+  }
+  scored.sort((a, b) => b.score - a.score || (a.sid < b.sid ? -1 : a.sid > b.sid ? 1 : 0));
+  return scored.slice(0, Math.max(1, topK)).map(({ score, sid, tool, reasons }) => {
+    const s = byId[sid];
+    return {
+      server_id: sid, title: s.title, category: s.category,
+      description: s.description, suggested_tool: tool,
+      install: s.run, repo: s.repo, score, reason: reasons.join("؛ ")
+    };
+  });
+}
+
+const $q = document.getElementById("q");
+const $results = document.getElementById("results");
+const $meta = document.getElementById("meta");
+const $chips = document.getElementById("chips");
+
+const SAMPLES = [
+  "قیمت سکه امامی",
+  "بلیط هواپیما تهران مشهد",
+  "نوبت دکتر قلب در تهران",
+  "ارزون‌ترین گوشی شیائومی",
+  "dollar price today",
+  "شاخص بورس تهران"
+];
+SAMPLES.forEach(s => {
+  const b = document.createElement("button");
+  b.textContent = s;
+  b.onclick = () => { $q.value = s; render(); $q.focus(); };
+  $chips.appendChild(b);
+});
+
+function copyText(btn, text) {
+  const done = () => { btn.textContent = "کپی شد ✓"; setTimeout(() => btn.textContent = "کپی", 1500); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => fallback());
+  } else fallback();
+  function fallback() {
+    const ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); done(); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+}
+
+function render() {
+  const q = $q.value.trim();
+  $results.innerHTML = "";
+  $meta.textContent = "";
+  if (!q) return;
+  let res;
+  try { res = route(q, 3); }
+  catch (e) {
+    $results.innerHTML = '<div class="empty">خطا در مسیریابی: ' + e.message + "</div>";
+    return;
+  }
+  if (!res.length) {
+    $results.innerHTML = '<div class="empty">سرور مناسبی پیدا نشد.<br>یه عبارت دیگه امتحان کن — مثلاً «قیمت دلار» یا «بلیط قطار».</div>';
+    return;
+  }
+  $meta.textContent = res.length + " گزینه پیدا شد";
+  res.forEach((r, i) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML =
+      '<div><span class="rank">' + (i + 1) + "</span><h3>" + escapeHtml(r.title) + "</h3>" +
+      '<span class="cat">' + escapeHtml(r.category) + "</span></div>" +
+      '<div class="desc">' + escapeHtml(r.description) + "</div>" +
+      '<div class="row"><span class="lbl">ابزار پیشنهادی</span><code>' + escapeHtml(r.suggested_tool) + "</code></div>" +
+      '<div class="row"><span class="lbl">دستور نصب</span><code>' + escapeHtml(r.install) + '</code>' +
+      '<button class="copy">کپی</button></div>' +
+      '<div class="row"><span class="lbl">ریپو</span><a class="repo" href="' + escapeHtml(r.repo) + '" target="_blank" rel="noopener">' +
+      escapeHtml(r.repo.replace("https://github.com/", "")) + "</a></div>" +
+      '<div class="reason"><b>چرا این؟</b> ' + escapeHtml(r.reason) + " (امتیاز " + r.score + ")</div>";
+    card.querySelector(".copy").onclick = e => copyText(e.target, r.install);
+    $results.appendChild(card);
+  });
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+let timer = null;
+$q.addEventListener("input", () => {
+  clearTimeout(timer);
+  timer = setTimeout(render, 220);
+});
+$q.addEventListener("keydown", e => { if (e.key === "Enter") { clearTimeout(timer); render(); } });
+
+(function init() {
+  const n = (window.IRAN_MCP_CATALOG && window.IRAN_MCP_CATALOG.servers.length) || 0;
+  const tools = n ? window.IRAN_MCP_CATALOG.servers.reduce((a, s) => a + s.tools.length, 0) : 0;
+  document.getElementById("srvCount").textContent =
+    n ? n + " سرور MCP ایرانی • " + tools + " ابزار" : "کاتالوگ بارگذاری نشد";
+})();
+</script>
+</body>
+</html>
