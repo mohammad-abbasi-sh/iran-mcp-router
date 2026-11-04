@@ -303,6 +303,17 @@ SERVER_RULES = [
         "intent_tools": {},
     },
     {
+        "id": "iran-vod-mcp",
+        "aliases": ["filimo", "namava", "فیلیمو", "نماوا"],
+        "keywords": [
+            "فیلم", "سریال", "قسمت", "فصل", "بازیگر", "کارگردان",
+            "کجا ببینم", "تماشا", "movie", "film", "series", "episode",
+            "season", "actor", "director", "where to watch", "vod",
+        ],
+        "tool": "vod_search",
+        "intent_tools": {},
+    },
+    {
         "id": "qavanin-mcp",
         "aliases": ["qavanin", "قوانین"],
         "keywords": ["قوانین", "متن قانون", "قانون", "qavanin", "law"],
