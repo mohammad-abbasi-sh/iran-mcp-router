@@ -167,6 +167,15 @@ class TestRouteNewRules(unittest.TestCase):
     def test_bus_ticket(self):
         self.assertEqual(self._top("بلیط اتوبوس")["server_id"], "flytoday-mcp")
 
+    def test_filimo_series(self):
+        top = self._top("امشب توی فیلیمو چه سریالی ببینم")
+        self.assertEqual(top["server_id"], "iran-vod-mcp")
+        self.assertEqual(top["suggested_tool"], "vod_search")
+
+    def test_namava_movie_en(self):
+        top = self._top("where can I watch this movie, namava or filimo")
+        self.assertEqual(top["server_id"], "iran-vod-mcp")
+
     def test_all_rules_reference_real_servers(self):
         from router import SERVER_RULES
         import json, os
